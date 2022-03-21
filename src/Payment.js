@@ -1,9 +1,11 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import axios from "axios";
+import { doc, setDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import CurrencyFormat from "react-currency-format";
 import { Link, useNavigate } from "react-router-dom";
 import CheckoutProduct from "./CheckoutProduct";
+import { db } from "./firebase";
 import "./Payment.css";
 import { getBasketTotal } from "./reducer";
 import { useStateValue } from "./StateProvider";
@@ -42,22 +44,33 @@ function Payment() {
     // do all stripe stuff
     e.preventDefault();
     setProcessing(true);
-    const payload = await stripe
-      .confirmCardPayment(clientSecret, {
-        payment_method: { card: elements.getElement(CardElement) },
-      })
-      .then(({ paymentIntent }) => {
-        // paymentIntent = payment confirmation
-        setSucceeded(true);
-        setError(null);
-        setProcessing(false);
+    const payload = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: elements.getElement(CardElement) },
+    });
 
-        dispatch({
-          type: "EMPTY_BASKET",
-        });
+    if (payload) {
+      console.log("payload = ", payload);
+      console.log("user = ", user);
 
-        navigate("/orders", { replace: true });
+      const orderRef = doc(
+        db,
+        `users/${user?.uid}/orders/${payload.paymentIntent?.id}`
+      );
+      await setDoc(orderRef, {
+        basket: basket,
+        amount: payload.paymentIntent?.amount,
+        created: payload.paymentIntent?.created,
       });
+      setSucceeded(true);
+      setError(null);
+      setProcessing(false);
+
+      dispatch({
+        type: "EMPTY_BASKET",
+      });
+
+      navigate("/orders", { replace: true });
+    }
   };
 
   const handleChange = (e) => {
