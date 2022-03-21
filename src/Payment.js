@@ -22,22 +22,24 @@ function Payment() {
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(true);
   const [clientSecret, setClientSecret] = useState(true);
+  let iKey = 1;
 
   useEffect(() => {
     // generate the special stripe secret  which allows us
     // to charge a customer
-
-    const getClientSecret = async () => {
-      const response = await axios({
-        method: "post",
-        // Stripe expects the total in a currencies subunits
-        url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
-        baseURL: "http://localhost:5001/challenge-507b1/us-central1/api/",
-      });
-      setClientSecret(response.data.clientSecret);
-    };
-
-    getClientSecret();
+    if (basket?.length > 0) {
+      const getClientSecret = async () => {
+        const response = await axios({
+          method: "post",
+          // Stripe expects the total in a currencies subunits
+          url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
+          // url: `/payments/create?total=${getBasketTotal(basket)}`,
+          baseURL: "http://localhost:5001/challenge-507b1/us-central1/api/",
+        });
+        setClientSecret(response.data.clientSecret);
+      };
+      getClientSecret();
+    }
   }, [basket]);
 
   const handleSubmit = async (e) => {
@@ -49,9 +51,6 @@ function Payment() {
     });
 
     if (payload) {
-      console.log("payload = ", payload);
-      console.log("user = ", user);
-
       const orderRef = doc(
         db,
         `users/${user?.uid}/orders/${payload.paymentIntent?.id}`
@@ -107,6 +106,7 @@ function Payment() {
             <p>
               {basket?.map((item) => (
                 <CheckoutProduct
+                  key={iKey++}
                   id={item.id}
                   title={item.title}
                   image={item.image}

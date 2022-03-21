@@ -30,3 +30,7 @@
 .payment__details {
   flex: 0.8; /* title takes up 80% */
 }
+
+.payment__details > form {
+  max-width: 400px;
+}

@@ -6,6 +6,7 @@ import Subtotal from "./Subtotal";
 
 function Checkout() {
   const [{ basket, user }, dispatch] = useStateValue();
+  let iKey = 1;
 
   return (
     <div className="checkout">
@@ -21,6 +22,7 @@ function Checkout() {
           <h2 className="checkout__title">Your Shopping Basket</h2>
           {basket.map((item) => (
             <CheckoutProduct
+              key={iKey++}
               id={item.id}
               title={item.title}
               image={item.image}
